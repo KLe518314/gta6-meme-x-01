@@ -40,5 +40,15 @@ if (
 }
 
 mkdirSync(outDir, { recursive: true });
-copyFileSync(source, join(outDir, "POST.json"));
+const dest = join(outDir, "POST.json");
+copyFileSync(source, dest);
+
+// Verify the copy round-trips: re-read what we wrote and confirm it still
+// parses and names the same post. A partial write must fail loudly instead
+// of leaving a corrupt POST.json in the output directory.
+const copied = JSON.parse(readFileSync(dest, "utf8")) as { url?: unknown };
+if (copied.url !== url) {
+  console.error("POST.json copy does not match the source; refusing to continue");
+  process.exit(1);
+}
 console.log(`post: ${url}`);
